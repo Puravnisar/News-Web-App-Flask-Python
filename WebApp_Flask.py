@@ -123,8 +123,42 @@ def wordcloud():
     # print(finalwordsjson)      
     return finalwordsjson
 
+@app.route("/getsources")
+def getsources():
+    #print("getsources")
+   #print(request.url)
+    category=request.args.get('value')
+    #print("category=",category)
+    newsapi = NewsApiClient(api_key='846079b7bf6b4c4bab42531fa9969190')
+    if(category=="all"):
+        sources = newsapi.get_sources(language="en", country="us")
+    else: 
+        sources = newsapi.get_sources(category=category, language="en", country="us")
+    #print(sources)
+    namesources=sources['sources']
+    getnames=[]
+    if(category=="all"):
+        tempcounter=0;
+        for item in namesources:
+            getnames.append({item['id']:item['name']})
+            tempcounter+=1
+            if tempcounter>=10:
+                break
+    else:
+        for item in namesources:
+            getnames.append({item['id']:item['name']})
+    #print("names=",getnames)
+    finalnames={}
+    finalnames['names']=getnames
+    response = app.response_class(
+        response=json.dumps(finalnames),
+        status=200,
+        mimetype='application/json'
+    )
+    #return render_template("index2.html")
+    return response
 
-    
+
 @app.route("/Purav")
 def Purav():
     return "Hello, Purav"
