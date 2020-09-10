@@ -158,6 +158,98 @@ def getsources():
     #return render_template("index2.html")
     return response
 
+@app.route("/formdata")
+def formdata():
+    newsapi = NewsApiClient(api_key='846079b7bf6b4c4bab42531fa9969190')
+    #print("in form")
+    #print("URL ",request.url)
+    Keyword=request.args.get('Keyword')
+    #print(Keyword)
+    Fromdate=request.args.get('Fromdate')
+    #print(Fromdate)
+    Todate=request.args.get('Todate')
+    #print(Todate)
+    Category=request.args.get('Category')
+    #print(Category)
+    Source=request.args.get('Source')
+    #print(Source)
+    try:
+        # if(Source=="all"):
+        #     getsearch=newsapi.get_everything(q=Keyword, from_param=Fromdate, to=Todate, language='en', sort_by='publishedAt',page_size=100)
+        # else:    
+        #     getsearch=newsapi.get_everything(q=Keyword, sources=Source, from_param=Fromdate, to=Todate, language='en', sort_by='publishedAt',page_size=100)
+        if(Source=="all" and Category=="all"):
+            getsearch=newsapi.get_everything(q=Keyword, from_param=Fromdate, to=Todate, language='en', sort_by='publishedAt',page_size=100)
+        elif (Category!="all" and Source=="all"):
+            sources = newsapi.get_sources(category=Category, language="en", country="us")
+            namesources=sources['sources']
+            getnames=""
+            for item in namesources:
+                getnames+=item['id']+","
+            getnames=getnames[:len(getnames)-1]
+            #print("Category sources", getnames)
+            getsearch=newsapi.get_everything(q=Keyword, sources=getnames, from_param=Fromdate, to=Todate, language='en', sort_by='publishedAt',page_size=100)
+        else:    
+            getsearch=newsapi.get_everything(q=Keyword, sources=Source, from_param=Fromdate, to=Todate, language='en', sort_by='publishedAt',page_size=100)
+        #getsearch=newsapi.get_everything(q=Keyword, sources=Source,page_size=50)
+        #print("getsearch full json\n",getsearch)
+        #print("getsearch\n\n\n\n\n")
+        #print(getsearch['articles'])
+        getarticles=getsearch['articles']
+        finala=[]
+        countera=1
+        for item1 in getarticles:
+            if item1["source"]  is None or item1["source"]["name"] is None or item1["author"]  is None or item1["title"]  is None or item1["description"]  is None or item1["url"]  is None or item1["urlToImage"]  is None or item1["publishedAt"]  is None: 
+                continue
+            temp={}
+            temp["urlToImage"]=item1["urlToImage"]
+            temp["source"]=item1["source"]
+            temp["url"]=item1["url"]
+            temp["title"]=item1["title"]
+            temp["author"]=item1["author"]
+            publishdate=item1["publishedAt"][5:7]+"/"+item1["publishedAt"][8:10]+"/"+item1["publishedAt"][:4]
+            #temp["publishedAt"]=item1["publishedAt"]
+            temp["publishedAt"]=publishdate
+            # if(len(item1["content"])>150):
+            #     temp["description"]=item1["description"][:100]+"..."
+            # else :
+            #     temp["description"]=item1["description"] 
+            #temp["content"]=item1["content"].split('.')[0]
+            temp["description"]=item1["description"] 
+            finala.append(temp)
+            #finala.append(item1)
+            #print(countera)
+            countera+=1
+            if countera>15:
+                break
+        response={'articles':finala}
+    except Exception as e:
+        #print("in exception")
+        #print("Here   ",e)
+
+        response={}
+        temp=str(e)
+        temp=temp.replace("\'", "\"")
+        #print("description ",e.description)
+        #response["status"]=e.status
+        #response["message"]=e.message
+        #response=str(e)
+        # response={}
+        # response["message"]=e["message"]
+        response = json.loads(temp)
+        #print("after converting", response)
+        #print("Type",type(response)) 
+    #print("outside",response)        
+    #return jsonify({'result':response})
+    # response = app.response_class(
+    #     response=json.dumps(response),
+    #     status=200,
+    #     mimetype='application/json'
+    # )
+    return jsonify(response)
+
+    #return render_template("index2.html")
+    #return app.send_static_file("index3.html")
 
 @app.route("/Purav")
 def Purav():
